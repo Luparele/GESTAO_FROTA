@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Veículo - {{ veiculo.placa }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem; position: relative; overflow: hidden;">
+    <div
+        style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);">
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">Veículo: {{ veiculo.placa }}</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7);">{{ veiculo.marca }} {{ veiculo.modelo }} ({{ veiculo.ano_modelo }}) - Frota {{ veiculo.tipo_frota }}</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'APP_FROTA:veiculo_list' %}" class="btn"
+                style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">Voltar</a>
+            {% if user.is_superuser %}
+            <button type="button" id="btnEditar" class="btn" style="background: rgba(0, 150, 255, 0.4);"
+                onclick="habilitarEdicao()">Editar Dados</button>
+            <form method="post" action="{% url 'APP_FROTA:veiculo_delete' veiculo.pk %}"
+                onsubmit="return confirm('Tem certeza que deseja excluir o veículo {{ veiculo.placa }}?');"
+                style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn"
+                    style="background: rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 0.2);">Excluir</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem; padding: 2rem; position: relative;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0;">Ficha Completa</h3>
+        <button type="button" id="btnToggleDetalhes" class="btn"
+            style="background: rgba(255,255,255,0.05); padding: 5px 15px; font-size: 0.85rem;"
+            onclick="toggleDetalhes()">+ Detalhes</button>
+    </div>
+    <form method="post" enctype="multipart/form-data" id="formVeiculo">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit">
+
+        <!-- Basic Info Section -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            {% for field in form %}
+            {% if field.name in 'tipo_frota,condutor,placa,crlv_upload,marca,modelo,ano_fabricacao,ano_modelo' %}
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label for="{{ field.id_for_label }}" style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">{{ field.label }}</label>
+                <div class="field-wrapper">
+                    {% if field.name == 'crlv_upload' %}
+                    {% if veiculo.crlv_upload %}
+                    <div class="file-view-link" style="margin-top: 5px;">
+                        <a href="{{ veiculo.crlv_upload.url }}" target="_blank"
+                            style="color: #00c6ff; text-decoration: none;">{{ veiculo.crlv_filename }}</a>
+                    </div>
+                    {% else %}
+                    <div class="file-view-link"
+                        style="margin-top: 5px; color: rgba(255,255,255,0.4); font-size: 0.9rem;">Nenhum arquivo anexado
+                    </div>
+                    {% endif %}
+                    <div class="file-edit-input" style="display: none; margin-top: 5px;">{{ field }}</div>
+                    {% elif field.name == 'condutor' %}
+                    <div class="condutor-field-wrapper" style="position: relative;">
+                        {% if veiculo.condutor and veiculo.condutor.cnh_upload %}
+                        <span class="condutor-view-link" style="display: block;">
+                            <a href="{{ veiculo.condutor.cnh_upload.url }}" target="_blank"
+                                style="color: #00c6ff; text-decoration: underline;">{{ veiculo.condutor.nome }}</a>
+                        </span>
+                        {% else %}
+                        <span class="condutor-view-link" style="display: block;">{{ veiculo.condutor.nome|default:"-" }}</span>
+                        {% endif %}
+                        <div class="condutor-edit-input" style="display: none;">{{ field }}</div>
+                    </div>
+                    {% else %}
+                    {{ field }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Extra Info Section (Collapsible) -->
+        <div id="extraDetalhes"
+            style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dotted rgba(255,255,255,0.1);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                {% for field in form %}
+                {% if field.name not in 'tipo_frota,condutor,placa,crlv_upload,marca,modelo,ano_fabricacao,ano_modelo' %}
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label for="{{ field.id_for_label }}" style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">{{ field.label }}</label>
+                    <div class="field-wrapper">
+                        {% if field.name == 'data_primeiro_vencimento' %}
+                        <div class="finance-field-wrapper" style="position: relative;">
+                            <span class="finance-view-link"
+                                style="display: block; cursor: pointer; color: #00c6ff; text-decoration: underline;"
+                                onclick="abrirModalParcelas()">
+                                {{ veiculo.data_primeiro_vencimento|date:"d/m/Y" }}
+                            </span>
+                            <div class="finance-edit-input" style="display: none;">{{ field }}</div>
+                        </div>
+                        {% else %}
+                        {{ field }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="divSalvar"
+            style="display: none; margin-top: 1.5rem; text-align: right; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="cancelarEdicao()">Cancelar</button>
+            <button type="submit" class="btn">Confirmar Alterações</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Parcelas -->
+<div id="modalParcelas"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;">
+    <div class="card"
+        style="max-width: 600px; margin: 5% auto; position: relative; padding: 2rem; border-top: 4px solid #00c6ff;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+            <h3 style="margin: 0;">Agenda de Parcelas</h3>
+            <button onclick="fecharModalParcelas()" class="btn"
+                style="background: transparent; border: none; font-size: 1.5rem; padding: 0; cursor: pointer;">&times;</button>
+        </div>
+
+        <div
+            style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between;">
+            <div>
+                <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6);">Valor Unitário</p>
+                <p style="margin: 0; font-size: 1.2rem; font-weight: bold; color: #64ffda;">R$ {{ veiculo.valor_parcela }}</p>
+            </div>
+            <div>
+                <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6);">Total de Parcelas</p>
+                <p style="margin: 0; font-size: 1.2rem; font-weight: bold;">{{ veiculo.numero_parcelas }}</p>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                    <th style="padding: 10px;">Parcela</th>
+                    <th style="padding: 10px;">Vencimento</th>
+                    <th style="padding: 10px; text-align: right;">Valor</th>
+                </tr>
+            </thead>
+            <tbody id="listaParcelas">
+                <!-- Populado por JS -->
+            </tbody>
+        </table>
+
+        <div style="margin-top: 2rem; text-align: center;">
+            <button onclick="fecharModalParcelas()" class="btn">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="padding: 2rem;">
+    <h3 style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">Histórico
+        e Observações</h3>
+
+    <div
+        style="margin-bottom: 2rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+        <form method="post" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_note">
+            <div style="flex-grow: 1;">
+                <label for="observacao" style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Registrar
+                    Observação Manual</label>
+                <input type="text" name="observacao" id="observacao" class="form-control"
+                    placeholder="Digite aqui o que aconteceu ou foi modificado..." required
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+            </div>
+            <button type="submit" class="btn" style="padding: 10px 20px; white-space: nowrap;">Adicionar ao
+                Histórico</button>
+        </form>
+    </div>
+
+    <!-- Timeline of History -->
+    <div style="position: relative; padding-left: 20px;">
+        {% if historico %}
+        <div
+            style="position: absolute; left: 6px; top: 10px; bottom: 10px; width: 2px; background: rgba(255,255,255,0.1);">
+        </div>
+        {% for item in historico %}
+        <div style="position: relative; margin-bottom: 1.5rem;">
+            <div
+                style="position: absolute; left: -21px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: var(--primary-color); box-shadow: 0 0 10px rgba(0,150,255,0.5);">
+            </div>
+            <div
+                style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <strong style="color: #64ffda; font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">{{ item.data_hora|date:"d/m/Y \à\s H:i" }}</strong>
+                <p style="margin: 0; font-size: 0.95rem; white-space: pre-wrap;">{{ item.descricao }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color: rgba(255,255,255,0.5); font-style: italic;">Nenhum registro no histórico deste veículo.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Styling to make form look like plain text when inactive */
+    .field-wrapper input,
+    .field-wrapper select,
+    .field-wrapper textarea {
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        color: white !important;
+        pointer-events: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    /* Hide the calendar icon to look like plain text */
+    .field-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    /* Hide the select clear/arrow indicators by default to look like plain text */
+    .field-wrapper select {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: -5px;
+    }
+
+    .field-wrapper input {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: -5px;
+    }
+
+    .form-editing .file-edit-input,
+    .form-editing .condutor-edit-input,
+    .form-editing .finance-edit-input {
+        display: block !important;
+    }
+
+    .form-editing .condutor-view-link,
+    .form-editing .finance-view-link {
+        display: none !important;
+    }
+
+
+    /* Hide clear checkbox container provided by django in readonly mode */
+    .field-wrapper a {
+        color: #00c6ff;
+        text-decoration: none;
+    }
+
+    .field-wrapper br,
+    .field-wrapper label[for$="-clear_id"] {
+        display: none !important;
+    }
+
+    .field-wrapper input[type="file"] {
+        display: none;
+    }
+
+    /* Reveal file inputs only when editing */
+    .form-editing .field-wrapper input[type="file"] {
+        display: block;
+        margin-top: 10px;
+    }
+
+    /* Format the currently uploaded file string */
+    .field-wrapper {
+        font-size: 0.9rem;
+    }
+
+    /* Style checkboxes specially */
+    .field-wrapper input[type="checkbox"] {
+        -moz-appearance: auto;
+        -webkit-appearance: auto;
+        appearance: auto;
+        margin-top: 5px;
+        opacity: 0.7;
+    }
+
+    .form-editing .field-wrapper input[type="checkbox"] {
+        opacity: 1;
+    }
+
+    /* Reveal standard input styling when form has 'editing' class */
+    .form-editing .field-wrapper input,
+    .form-editing .field-wrapper select,
+    .form-editing .field-wrapper textarea {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-left: 15px !important;
+        pointer-events: auto;
+    }
+
+    .form-editing .field-wrapper select {
+        -moz-appearance: auto;
+        -webkit-appearance: auto;
+        appearance: auto;
+    }
+
+    .form-editing .field-wrapper input[type="file"] {
+        pointer-events: auto;
+    }
+
+    /* Reveal the calendar icon when editing */
+    .form-editing .field-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+        display: block;
+        -webkit-appearance: auto;
+        filter: invert(1);
+    }
+</style>
+
+<script>
+    const form = document.getElementById('formVeiculo');
+    const btnEditar = document.getElementById('btnEditar');
+    const divSalvar = document.getElementById('divSalvar');
+    const tipoFrotaField = document.getElementById("id_tipo_frota");
+    const tipoCoberturaField = document.getElementById("id_tipo_cobertura");
+
+    function habilitarEdicao() {
+        form.classList.add('form-editing');
+        btnEditar.style.display = 'none';
+        divSalvar.style.display = 'block';
+
+        // Auto-expand details when editing
+        const extra = document.getElementById('extraDetalhes');
+        const btnToggle = document.getElementById('btnToggleDetalhes');
+        extra.style.display = 'block';
+        btnToggle.innerText = '- Detalhes';
+    }
+
+    function cancelarEdicao() {
+        form.classList.remove('form-editing');
+        btnEditar.style.display = 'inline-block';
+        divSalvar.style.display = 'none';
+        form.reset(); // Revert to original data
+
+        // Collapse details when canceling
+        const extra = document.getElementById('extraDetalhes');
+        const btnToggle = document.getElementById('btnToggleDetalhes');
+        extra.style.display = 'none';
+        btnToggle.innerText = '+ Detalhes';
+    }
+
+    function toggleDetalhes() {
+        const extra = document.getElementById('extraDetalhes');
+        const btnToggle = document.getElementById('btnToggleDetalhes');
+        if (extra.style.display === 'none') {
+            extra.style.display = 'block';
+            btnToggle.innerText = '- Detalhes';
+        } else {
+            // Only collapse if NOT in edit mode
+            if (!form.classList.contains('form-editing')) {
+                extra.style.display = 'none';
+                btnToggle.innerText = '+ Detalhes';
+            } else {
+                alert("Os detalhes devem permanecer visíveis durante a edição.");
+            }
+        }
+    }
+
+    function updateCobertura() {
+        if (!form.classList.contains('form-editing')) return;
+        if (tipoFrotaField.value === "Própria") {
+            tipoCoberturaField.value = "Completo";
+            tipoCoberturaField.setAttribute("readonly", true);
+        } else if (tipoFrotaField.value === "Agregado") {
+            tipoCoberturaField.value = "RCV Terceiros";
+            tipoCoberturaField.setAttribute("readonly", true);
+        } else {
+            tipoCoberturaField.value = "";
+            tipoCoberturaField.removeAttribute("readonly");
+        }
+    }
+
+    // Bind event
+    if (tipoFrotaField) {
+        tipoFrotaField.addEventListener("change", updateCobertura);
+    }
+
+    function abrirModalParcelas() {
+        if (form.classList.contains('form-editing')) return;
+
+        const modal = document.getElementById('modalParcelas');
+        const lista = document.getElementById('listaParcelas');
+        lista.innerHTML = '';
+
+        // Get values from hidden data or attributes
+        // The dates are in YYYY-MM-DD in the input field
+        const inputData = document.querySelector('input[name="data_primeiro_vencimento"]');
+        const inputParcelas = document.querySelector('input[name="numero_parcelas"]');
+        const inputValor = document.querySelector('input[name="valor_parcela"]');
+
+        if (!inputData || !inputParcelas) return;
+
+        let dataBase = new Date(inputData.value + 'T00:00:00');
+        const numParcelas = parseInt(inputParcelas.value) || 0;
+        const valor = parseFloat(inputValor.value) || 0;
+
+        for (let i = 1; i <= numParcelas; i++) {
+            let dataParcela = new Date(dataBase);
+            dataParcela.setMonth(dataBase.getMonth() + (i - 1));
+
+            // Handle day overflow (e.g., Feb 30 -> Mar 2)
+            if (dataParcela.getDate() != dataBase.getDate()) {
+                dataParcela.setDate(0);
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+            tr.innerHTML = `
+                <td style="padding: 10px;">${i}ª Parcela</td>
+                <td style="padding: 10px;">${dataParcela.toLocaleDateString('pt-BR')}</td>
+                <td style="padding: 10px; text-align: right; color: #64ffda;">R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            `;
+            lista.appendChild(tr);
+        }
+
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalParcelas() {
+        document.getElementById('modalParcelas').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+</script>
+{% endblock %}

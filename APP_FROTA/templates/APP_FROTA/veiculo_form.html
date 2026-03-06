@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Veículo - Gestão de Frota{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto; position: relative; overflow: hidden;">
+    <div
+        style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);">
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Cadastrar Veículo</h2>
+        <a href="{% url 'APP_FROTA:veiculo_list' %}" class="btn"
+            style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">Voltar</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <!-- Render form fields customized -->
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <small style="color: #ffcdd2; display: block; margin-top: 5px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div
+            style="margin-top: 2rem; border-top: 1px solid var(--glass-border); padding-top: 1.5rem; text-align: right;">
+            <button type="submit" class="btn" style="padding: 12px 30px; font-size: 1.1rem;">Salvar Veículo</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tipoFrotaField = document.getElementById("id_tipo_frota");
+        const tipoCoberturaField = document.getElementById("id_tipo_cobertura");
+
+        function updateCobertura() {
+            if (tipoFrotaField.value === "Própria") {
+                tipoCoberturaField.value = "Completo";
+                tipoCoberturaField.setAttribute("readonly", true);
+            } else if (tipoFrotaField.value === "Agregado") {
+                tipoCoberturaField.value = "RCV Terceiros";
+                tipoCoberturaField.setAttribute("readonly", true);
+            } else {
+                tipoCoberturaField.value = "";
+                tipoCoberturaField.removeAttribute("readonly");
+            }
+        }
+
+        // Execute on load
+        if (tipoFrotaField) {
+            updateCobertura();
+            // Execute on change
+            tipoFrotaField.addEventListener("change", updateCobertura);
+        }
+    });
+</script>
+{% endblock %}

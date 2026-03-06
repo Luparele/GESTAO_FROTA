@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestão de Frota{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --text-color: #ffffff;
+            --primary-color: rgba(0, 150, 255, 0.8);
+            --hover-color: rgba(0, 150, 255, 1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1c1c1c 0%, #2a2a2a 100%);
+            color: var(--text-color);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Abstract decorative background shapes */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(80px);
+        }
+
+        body::before {
+            width: 400px;
+            height: 400px;
+            background: rgba(0, 150, 255, 0.4);
+            top: -100px;
+            left: -100px;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            background: rgba(138, 43, 226, 0.4);
+            bottom: -50px;
+            right: -50px;
+        }
+
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ffffff, #b2dfdb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a,
+        .nav-links button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 400;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links button:hover,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            border-radius: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            box-sizing: border-box;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(0, 150, 255, 0.6);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.2);
+        }
+
+        /* Customize inputs created by django forms */
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            box-sizing: border-box;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: rgba(0, 150, 255, 0.6);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.2);
+        }
+
+        /* High-contrast styling for dropdowns */
+        select,
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        select:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: rgba(0, 150, 255, 0.6);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.3);
+        }
+
+        option {
+            background-color: #1a1a1a;
+            /* Dark background for the pop-up list */
+            color: white;
+            padding: 12px;
+        }
+
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .messages li {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            font-weight: 400;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .messages .error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #ffcdd2;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .messages .success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #c8e6c9;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        /* Specific modifications for child templates */
+        h2,
+        h3 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-top: 0;
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* Grid specifically for dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .dashboard-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            /* Removed the thick green top border */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+            border-radius: 4px 4px 0 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>Gestão de Frota</h1>
+        <nav>
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                <a href="{% url 'APP_FROTA:dashboard' %}"
+                    class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                    style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s;">Dashboard</a>
+                <a href="{% url 'APP_FROTA:veiculo_list' %}"
+                    class="{% if request.resolver_match.url_name == 'veiculo_list' or request.resolver_match.url_name == 'veiculo_create' or request.resolver_match.url_name == 'veiculo_detail' %}active{% endif %}"
+                    style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s;">Veículos</a>
+                <a href="{% url 'APP_FROTA:condutor_list' %}"
+                    class="{% if 'condutor' in request.resolver_match.url_name %}active{% endif %}"
+                    style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s;">Condutores</a>
+                {% if user.is_superuser %}
+                <a href="/admin/" target="_blank"
+                    style="color: #ffeb3b; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s;">Admin
+                    Django</a>
+                {% endif %}
+                <form action="{% url 'APP_FROTA:logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                        style="background: none; border: none; color: white; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s;">Sair</button>
+                </form>
+                {% else %}
+                <li><a href="{% url 'APP_FROTA:login' %}">Entrar</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+                {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+
+</html>

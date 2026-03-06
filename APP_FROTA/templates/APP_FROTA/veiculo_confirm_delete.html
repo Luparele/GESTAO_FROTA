@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Veículo - Gestão de Frota{% endblock %}
+
+{% block content %}
+<div class="card"
+    style="text-align: center; max-width: 500px; margin: 3rem auto; position: relative; overflow: hidden;">
+    <div
+        style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f44336 0%, #d32f2f 100%);">
+    </div>
+
+    <h2 style="margin-bottom: 1.5rem; color: #ffeb3b;">Confirmar Exclusão</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 2rem;">Tem certeza que deseja excluir o veículo <strong>{{ veiculo.placa }} - {{ veiculo.modelo }}</strong>?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'APP_FROTA:veiculo_detail' veiculo.pk %}" class="btn"
+                style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">Cancelar</a>
+            <button type="submit" class="btn"
+                style="background: rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 0.2);">Confirmar
+                Exclusão</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

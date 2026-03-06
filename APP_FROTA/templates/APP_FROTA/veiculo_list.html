@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Veículos - Gestão de Frota{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem; position: relative; overflow: hidden;">
+    <div
+        style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);">
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Veículos da Frota</h2>
+        {% if user.is_superuser %}
+        <a href="{% url 'APP_FROTA:veiculo_create' %}" class="btn">+ Adicionar Veículo</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" style="padding: 1.5rem; overflow-x: auto;">
+    {% if veiculos %}
+    <table style="width: 100%; border-collapse: collapse; text-align: left; color: white;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--glass-border);">
+                <th style="padding: 12px;">Placa</th>
+                <th style="padding: 12px;">Modelo</th>
+                <th style="padding: 12px;">Marca</th>
+                <th style="padding: 12px;">Condutor</th>
+                <th style="padding: 12px;">Tipo de Frota</th>
+                <th style="padding: 12px;">Tip. Cobertura</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for veiculo in veiculos %}
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); transition: background 0.3s; cursor: pointer;"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                onmouseout="this.style.background='transparent'"
+                onclick="window.location='{% url 'APP_FROTA:veiculo_detail' veiculo.pk %}'">
+                <td style="padding: 12px; font-weight: bold;">{{ veiculo.placa }}</td>
+                <td style="padding: 12px;">{{ veiculo.modelo }} ({{ veiculo.ano_modelo }})</td>
+                <td style="padding: 12px;">{{ veiculo.marca }}</td>
+                <td style="padding: 12px;">{{ veiculo.condutor }}</td>
+                <td style="padding: 12px;">
+                    {% if veiculo.tipo_frota == 'Própria' %}
+                    <span
+                        style="background: rgba(0, 150, 255, 0.2); padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(0, 150, 255, 0.4);">{{ veiculo.tipo_frota }}</span>
+                    {% else %}
+                    <span
+                        style="background: rgba(138, 43, 226, 0.2); padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(138, 43, 226, 0.4);">{{ veiculo.tipo_frota }}</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;">{{ veiculo.tipo_cobertura }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem;">
+        <h3 style="color: rgba(255,255,255,0.7); font-weight: 300;">Nenhum veículo cadastrado.</h3>
+        <p>Clique no botão acima para registrar o primeiro veículo da frota.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

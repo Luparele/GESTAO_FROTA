@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Condutores - Sistema de Frota{% endblock %}
+
+{% block content %}
+<div class="card"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <h2 style="margin: 0;">Condutores Cadastrados</h2>
+    {% if user.is_superuser %}
+    <a href="{% url 'APP_FROTA:condutor_create' %}" class="btn">Novo Condutor</a>
+    {% endif %}
+</div>
+
+
+
+<div class="card" style="padding: 0; overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+        <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500;">Nome</th>
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500;">CPF</th>
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500;">CNH</th>
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500;">Validade</th>
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500;">Telefone</th>
+                {% if user.is_superuser %}
+                <th style="padding: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 500; text-align: center;">Ações
+                </th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for condutor in condutores %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s; cursor: pointer;"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                onmouseout="this.style.background='transparent'">
+                <td style="padding: 1.2rem;"><strong>{{ condutor.nome }}</strong></td>
+                <td style="padding: 1.2rem;">{{ condutor.cpf }}</td>
+                <td style="padding: 1.2rem;">{{ condutor.cnh }}</td>
+                <td style="padding: 1.2rem;">{{ condutor.validade_cnh|date:"d/m/Y" }}</td>
+                <td style="padding: 1.2rem;">
+                    <a href="{{ condutor.whatsapp_url }}" target="_blank"
+                        style="color: #25D366; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                        {{ condutor.telefone }}
+                        <span
+                            style="font-size: 0.75rem; background: rgba(37, 211, 102, 0.2); padding: 2px 6px; border-radius: 5px;">WhatsApp</span>
+                    </a>
+                </td>
+                {% if user.is_superuser %}
+                <td style="padding: 1.2rem; text-align: center;">
+                    <form action="{% url 'APP_FROTA:condutor_delete' condutor.pk %}" method="post"
+                        onsubmit="return confirm('Excluir condutor {{ condutor.nome }}?');" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn"
+                            style="background: rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 0.2); padding: 5px 12px; font-size: 0.85rem;">Excluir</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 3rem; text-align: center; color: rgba(255,255,255,0.4);">Nenhum condutor
+                    cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
