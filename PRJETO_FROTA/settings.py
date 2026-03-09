@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-5p2i1hfv79p2%=s(2q+!bf42e$!@zobls3nop84d6b@-t84$#4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['frota.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
